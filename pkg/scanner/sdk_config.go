@@ -48,7 +48,7 @@ func ConfigFromSDKJSON(b []byte) Config {
 	if err := json.Unmarshal(b, &sdk); err != nil {
 		return cfg
 	}
-	if sdk.EntropyThreshold >= 0 {
+	if sdk.EntropyThreshold > 0 {
 		cfg.EntropyThreshold = sdk.EntropyThreshold
 	}
 	if sdk.Salt != "" {
@@ -65,7 +65,7 @@ func ConfigFromSDKJSON(b []byte) Config {
 		// SDK-provided keys match the CLI's case-insensitive matching.
 		keys := make([]string, len(sdk.SensitiveKeys))
 		for i, k := range sdk.SensitiveKeys {
-			keys[i] = strings.TrimSpace(k)
+			keys[i] = strings.ToLower(strings.TrimSpace(k))
 		}
 		cfg.SensitiveKeys = keys
 	}
@@ -79,7 +79,7 @@ func ConfigFromSDKJSON(b []byte) Config {
 		cfg.EntityTypeLabels = *sdk.EntityTypeLabels
 	}
 	if len(sdk.SensitiveKeyPatterns) > 0 {
-		if err := cfg.ApplySensitiveKeyPatterns(sdk.SensitiveKeyPatterns); err == nil {
+		if err := cfg.ApplySensitiveKeyPatterns(sdk.SensitiveKeyPatterns); err != nil {
 			cfg.SensitiveKeyPatterns = nil
 		}
 	}

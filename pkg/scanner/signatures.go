@@ -114,12 +114,12 @@ func hasTelegramShape(s string) bool {
 			return false
 		}
 		i += j
-		if i >= 4 && i+1 < len(s) && s[i+1] == 'A' {
+		if i >= 5 && i+1 < len(s) && s[i+1] == 'A' {
 			digits := 0
-			for k := i - 1; k >= 0 && s[k] > '0' && s[k] <= '9'; k-- {
+			for k := i - 1; k >= 0 && s[k] >= '0' && s[k] <= '9'; k-- {
 				digits++
 			}
-			if digits >= 4 {
+			if digits >= 5 {
 				return true
 			}
 		}

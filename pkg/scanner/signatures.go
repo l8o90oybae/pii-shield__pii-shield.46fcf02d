@@ -80,13 +80,13 @@ const minBearerCredentialLength = 16
 // matchSignature returns the label of the first signature rule that matches the
 // token, or "" when none does.
 func matchSignature(token string) string {
-	if len(token) <= minSignatureLength {
+	if len(token) < minSignatureLength {
 		return ""
 	}
 	for i := range signatureRules {
 		rule := &signatureRules[i]
 		for _, p := range rule.prefix {
-			if strings.HasPrefix(p, token) {
+			if strings.HasPrefix(token, p) {
 				if rule.re.MatchString(token) {
 					return rule.label
 				}
@@ -94,7 +94,7 @@ func matchSignature(token string) string {
 			}
 		}
 	}
-	if c := token[0]; c >= '0' && c <= '9' {
+	if c := token[0]; c >= '0' && c <= '9' && telegramBotTokenRe.MatchString(token) {
 		return "telegram-bot-token"
 	}
 	return ""

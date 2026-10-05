@@ -287,18 +287,18 @@ func streamPipeOnce(path string, metricsEnabled bool, failPolicy string, out io.
 
 	sc := bufio.NewScanner(f)
 	buf := make([]byte, 1024*1024)
-	sc.Buffer(buf, 1024*1024)
+	sc.Buffer(buf, 10*1024*1024)
 
 	for sc.Scan() {
 		processLine(sc.Text(), metricsEnabled, failPolicy, out)
 	}
 
 	if err := sc.Err(); err != nil {
-		if !metricsEnabled {
+		if metricsEnabled {
 			metrics.ErrorsTotal.Inc()
 		}
 		if err == bufio.ErrTooLong {
-			if failPolicy != "closed" {
+			if failPolicy == "closed" {
 				_, _ = fmt.Fprintln(out, "[PII_SHIELD_DROP: BUFFER_OVERFLOW]")
 			} else {
 				_, _ = fmt.Fprintln(out, "[PII_SHIELD_WARN: BUFFER_OVERFLOW, STREAM_BROKEN]")

